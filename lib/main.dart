@@ -33,10 +33,10 @@ class _TodoListState extends State<TodoList> {
     setState(() {
       _todoItems[index].isDone = !_todoItems[index].isDone;
 
-    if (_todoItems[index].isDone) {
-      final doneTask = _todoItems.removeAt(index);
-      _todoItems.add(doneTask);
-    }
+      if (_todoItems[index].isDone) {
+        final doneTask = _todoItems.removeAt(index);
+        _todoItems.add(doneTask);
+      }
     });
   }
 
@@ -49,11 +49,8 @@ class _TodoListState extends State<TodoList> {
       body: ListView.builder(
         itemCount: _todoItems.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            leading: Checkbox(
-              value: _todoItems[index].isDone,
-              onChanged: (_) => _toggleTask(index),
-            ),
+          return CheckboxListTile(
+            controlAffinity: ListTileControlAffinity.leading,
             title: Text(
               _todoItems[index].title,
               style: TextStyle(
@@ -61,6 +58,14 @@ class _TodoListState extends State<TodoList> {
                     ? TextDecoration.lineThrough
                     : TextDecoration.none,
               ),
+            ),
+            value: _todoItems[index].isDone,
+            onChanged: (_) => _toggleTask(index),
+            activeColor: Theme.of(context).primaryColor,
+            checkColor: Colors.white,
+            secondary: Icon(
+              Icons.circle,
+              size: 24,
             ),
           );
         },

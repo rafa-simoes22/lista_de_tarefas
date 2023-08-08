@@ -29,6 +29,8 @@ class _TodoListState extends State<TodoList> {
     TodoItem(title: 'Tarefa 5'),
   ];
 
+  TextEditingController _taskController = TextEditingController();
+
   void _toggleTask(int index) {
     setState(() {
       _todoItems[index].isDone = !_todoItems[index].isDone;
@@ -40,29 +42,63 @@ class _TodoListState extends State<TodoList> {
     });
   }
 
+  void _addTask(String taskTitle) {
+    if (taskTitle.isNotEmpty) {
+      setState(() {
+        _todoItems.add(TodoItem(title: taskTitle));
+      });
+      _taskController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Lista de Tarefas'),
       ),
-      body: ListView.builder(
-        itemCount: _todoItems.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _toggleTask(index),
-            child: ListTile(
-              title: Text(
-                _todoItems[index].title,
-                style: TextStyle(
-                  decoration: _todoItems[index].isDone
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                ),
-              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _todoItems.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _toggleTask(index),
+                  child: ListTile(
+                    title: Text(
+                      _todoItems[index].title,
+                      style: TextStyle(
+                        decoration: _todoItems[index].isDone
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _taskController,
+                    decoration: InputDecoration(
+                      hintText: 'Adicionar tarefa...',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _addTask(_taskController.text),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

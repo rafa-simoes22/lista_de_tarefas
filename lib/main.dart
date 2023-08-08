@@ -21,13 +21,7 @@ class TodoList extends StatefulWidget {
 }
 
 class _TodoListState extends State<TodoList> {
-  List<TodoItem> _todoItems = [
-    TodoItem(title: 'Tarefa 1'),
-    TodoItem(title: 'Tarefa 2'),
-    TodoItem(title: 'Tarefa 3'),
-    TodoItem(title: 'Tarefa 4'),
-    TodoItem(title: 'Tarefa 5'),
-  ];
+  List<TodoItem> _todoItems = [];
 
   TextEditingController _taskController = TextEditingController();
 
@@ -51,6 +45,12 @@ class _TodoListState extends State<TodoList> {
     }
   }
 
+  void _deleteTask(int index) {
+    setState(() {
+      _todoItems.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,15 +63,19 @@ class _TodoListState extends State<TodoList> {
             child: ListView.builder(
               itemCount: _todoItems.length,
               itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => _toggleTask(index),
-                  child: ListTile(
-                    title: Text(
-                      _todoItems[index].title,
-                      style: TextStyle(
-                        decoration: _todoItems[index].isDone
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+                return Dismissible(
+                  key: Key(_todoItems[index].title),
+                  onDismissed: (_) => _deleteTask(index),
+                  child: GestureDetector(
+                    onTap: () => _toggleTask(index),
+                    child: ListTile(
+                      title: Text(
+                        _todoItems[index].title,
+                        style: TextStyle(
+                          decoration: _todoItems[index].isDone
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
                       ),
                     ),
                   ),

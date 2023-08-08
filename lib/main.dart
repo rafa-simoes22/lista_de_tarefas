@@ -32,6 +32,11 @@ class _TodoListState extends State<TodoList> {
   void _toggleTask(int index) {
     setState(() {
       _todoItems[index].isDone = !_todoItems[index].isDone;
+
+      if (_todoItems[index].isDone) {
+        final doneTask = _todoItems.removeAt(index);
+        _todoItems.add(doneTask);
+      }
     });
   }
 

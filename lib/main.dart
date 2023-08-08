@@ -40,8 +40,8 @@ class _TodoListState extends State<TodoList> {
     if (taskTitle.isNotEmpty) {
       setState(() {
         _todoItems.add(TodoItem(title: taskTitle));
+        _taskController.clear();
       });
-      _taskController.clear();
     }
   }
 
@@ -88,10 +88,13 @@ class _TodoListState extends State<TodoList> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _taskController,
-                    decoration: InputDecoration(
-                      hintText: 'Adicionar tarefa...',
+                  child: Visibility(
+                    visible: _taskController.text.isNotEmpty,
+                    child: TextField(
+                      controller: _taskController,
+                      decoration: InputDecoration(
+                        hintText: 'Adicionar tarefa...',
+                      ),
                     ),
                   ),
                 ),

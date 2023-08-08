@@ -32,11 +32,6 @@ class _TodoListState extends State<TodoList> {
   void _toggleTask(int index) {
     setState(() {
       _todoItems[index].isDone = !_todoItems[index].isDone;
-
-      if (_todoItems[index].isDone) {
-        final doneTask = _todoItems.removeAt(index);
-        _todoItems.add(doneTask);
-      }
     });
   }
 
@@ -49,23 +44,17 @@ class _TodoListState extends State<TodoList> {
       body: ListView.builder(
         itemCount: _todoItems.length,
         itemBuilder: (context, index) {
-          return CheckboxListTile(
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(
-              _todoItems[index].title,
-              style: TextStyle(
-                decoration: _todoItems[index].isDone
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none,
+          return GestureDetector(
+            onTap: () => _toggleTask(index),
+            child: ListTile(
+              title: Text(
+                _todoItems[index].title,
+                style: TextStyle(
+                  decoration: _todoItems[index].isDone
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                ),
               ),
-            ),
-            value: _todoItems[index].isDone,
-            onChanged: (_) => _toggleTask(index),
-            activeColor: Theme.of(context).primaryColor,
-            checkColor: Colors.white,
-            secondary: Icon(
-              Icons.circle,
-              size: 24,
             ),
           );
         },

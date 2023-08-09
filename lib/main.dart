@@ -1,53 +1,79 @@
+
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(TodoApp());
+  runApp(TaskListApp());
 }
 
-class TodoApp extends StatelessWidget {
+class TaskListApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lista de Tarefas',
-      theme: ThemeData(primarySwatch: Colors.pink),
-      home: TodoList(),
+      title: 'Task List App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: TaskListScreen(),
     );
   }
 }
 
-class TodoList extends StatefulWidget {
-  @override
-  _TodoListState createState() => _TodoListState();
+class Task {
+  final String name;
+  bool isDone;
+  String comment;
+
+  Task(this.name, {this.isDone = false, this.comment = ''});
 }
 
-class _TodoListState extends State<TodoList> {
-  List<TodoItem> _todoItems = [];
+class TaskListScreen extends StatefulWidget {
+  @override
+  _TaskListScreenState createState() => _TaskListScreenState();
+}
 
-  TextEditingController _taskController = TextEditingController();
+class _TaskListScreenState extends State<TaskListScreen> {
+  List<Task> tasks = [];
+  String currentFolder = "Default Folder";
 
-  void _toggleTask(int index) {
+  void addTask(String name) {
     setState(() {
-      _todoItems[index].isDone = !_todoItems[index].isDone;
+      tasks.add(Task(name));
+    });
+  }
 
-      if (_todoItems[index].isDone) {
-        final doneTask = _todoItems.removeAt(index);
-        _todoItems.add(doneTask);
+  void toggleTask(int index) {
+    setState(() {
+      tasks[index].isDone = !tasks[index].isDone;
+      if (tasks[index].isDone) {
+        Task completedTask = tasks.removeAt(index);
+        tasks.add(completedTask);
       }
     });
   }
 
-  void _addTask(String taskTitle) {
-    if (taskTitle.isNotEmpty) {
-      setState(() {
-        _todoItems.add(TodoItem(title: taskTitle));
-        _taskController.clear();
-      });
-    }
+  void addComment(int index, String comment) {
+    setState(() {
+      tasks[index].comment = comment;
+    });
   }
 
-  void _deleteTask(int index) {
+  void openCommentScreen(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommentScreen(
+          task: tasks[index],
+          onCommentAdded: (comment) {
+            addComment(index, comment);
+          },
+        ),
+      ),
+    );
+  }
+
+  void createFolder(String folderName) {
     setState(() {
-      _todoItems.removeAt(index);
+      currentFolder = folderName;
     });
   }
 
@@ -55,65 +81,166 @@ class _TodoListState extends State<TodoList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lista de Tarefas'),
+        title: Text('Task List'),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _todoItems.length,
-              itemBuilder: (context, index) {
-                return Dismissible(
-                  key: Key(_todoItems[index].title),
-                  onDismissed: (_) => _deleteTask(index),
-                  child: GestureDetector(
-                    onTap: () => _toggleTask(index),
-                    child: ListTile(
-                      title: Text(
-                        _todoItems[index].title,
-                        style: TextStyle(
-                          decoration: _todoItems[index].isDone
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                        ),
-                      ),
-                    ),
+      body: ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(tasks[index].name),
+            onTap: () {
+              toggleTask(index);
+            },
+            onLongPress: () {
+              openCommentScreen(index);
+            },
+            trailing: tasks[index].isDone
+                ? Icon(Icons.check_circle, color: Colors.green)
+                : null,
+          );
+        },
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            ListTile(
+              title: Text('Folders'),
+              subtitle: Text(currentFolder),
+            ),
+            Divider(),
+            ListTile(
+              title: Text('Create Folder'),
+              onTap: () {
+                Navigator.pop(context);
+                showDialog(
+                  context: context,
+                  builder: (context) => CreateFolderDialog(
+                    onCreateFolder: createFolder,
                   ),
                 );
               },
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0), 
-            child: Row(
-              children: [
-                Expanded(
-                  child: Visibility(
-                    visible: _taskController.text.isNotEmpty,
-                    child: TextField(
-                      controller: _taskController,
-                      decoration: InputDecoration(
-                        hintText: 'Adicionar tarefa...',
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => _addTask(_taskController.text),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          String taskName = await showDialog(
+            context: context,
+            builder: (context) => TaskDialog(),
+          );
+          if (taskName != null) {
+            addTask(taskName);
+          }
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
 }
 
-class TodoItem {
-  final String title;
-  bool isDone;
+class TaskDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    String taskName = '';
 
-  TodoItem({required this.title, this.isDone = false});
+    return AlertDialog(
+      title: Text('Add Task'),
+      content: TextField(
+        onChanged: (value) {
+          taskName = value;
+        },
+        decoration: InputDecoration(labelText: 'Task name'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context, taskName);
+          },
+          child: Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+class CommentScreen extends StatefulWidget {
+  final Task task;
+  final Function(String) onCommentAdded;
+
+  CommentScreen({required this.task, required this.onCommentAdded});
+
+  @override
+  _CommentScreenState createState() => _CommentScreenState();
+}
+
+class _CommentScreenState extends State<CommentScreen> {
+  String comment = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add Comment'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Task: ${widget.task.name}'),
+            SizedBox(height: 16),
+            TextField(
+              onChanged: (value) {
+                setState(() {
+                  comment = value;
+                });
+              },
+              decoration: InputDecoration(labelText: 'Comment'),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                widget.onCommentAdded(comment);
+                Navigator.pop(context);
+              },
+              child: Text('Add Comment'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CreateFolderDialog extends StatelessWidget {
+  final Function(String) onCreateFolder;
+
+  CreateFolderDialog({required this.onCreateFolder});
+
+  @override
+  Widget build(BuildContext context) {
+    String folderName = '';
+
+    return AlertDialog(
+      title: Text('Create Folder'),
+      content: TextField(
+        onChanged: (value) {
+          folderName = value;
+        },
+        decoration: InputDecoration(labelText: 'Folder name'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            if (folderName.isNotEmpty) {
+              onCreateFolder(folderName);
+            }
+            Navigator.pop(context);
+          },
+          child: Text('Create'),
+        ),
+      ],
+    );
+  }
 }
